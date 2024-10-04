@@ -1,0 +1,19 @@
+name: gungame
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.3
+
+dependencies:
+  flutter:
+    sdk: flutter  # Framework principal para desenvolvimento de aplicativos multiplataforma
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter  # Ferramentas de teste para aplicativos Flutter
+  flutter_lints: ^5.0.0  # Regras de linting para melhores práticas de codificação Flutter
+
+flutter:
+  uses-material-design: true  # Habilita o uso de widgets do Material Design
