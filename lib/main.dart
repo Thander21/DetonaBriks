@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'ui/game_screen.dart';
 
+
 // Função principal que inicia a aplicação
 void main() {
   runApp(const MyApp());
