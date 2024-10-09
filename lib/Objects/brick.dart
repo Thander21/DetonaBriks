@@ -5,27 +5,60 @@ class Brick {
   Offset position;
   int value;
   static const double radius = 25.0;
+  Color color;
 
-  Brick({required this.position, required this.value});
+  Brick({required this.position, required this.value, required this.color});
 
-  // Gera uma lista de blocos aleatórios
+  // Gera uma lista de blocos estrategicamente posicionados
   static List<Brick> generateBricks(Size screenSize, int count) {
     final random = Random();
-    return List.generate(count, (index) {
-      return Brick(
-        position: Offset(
-          random.nextDouble() * (screenSize.width - 2 * radius),
-          random.nextDouble() * (screenSize.height / 2),
-        ),
-        value: random.nextInt(25) + 1,
+    final bricks = <Brick>[];
+    final gridSize = sqrt(count).ceil();
+    final cellWidth = screenSize.width / gridSize;
+    final cellHeight = (screenSize.height / 2) / gridSize;
+
+    for (int i = 0; i < count; i++) {
+      final row = i ~/ gridSize;
+      final col = i % gridSize;
+      final value = random.nextInt(25) + 1;
+      final position = Offset(
+        (col + 0.5) * cellWidth,
+        (row + 0.5) * cellHeight,
       );
-    });
+
+      bricks.add(Brick(
+        position: position,
+        value: value,
+        color: _getColorForValue(value),
+      ));
+    }
+
+    return bricks;
+  }
+
+  // Retorna a cor baseada no valor do bloco
+  static Color _getColorForValue(int value) {
+    final colorRange = value ~/ 5;
+    switch (colorRange) {
+      case 0:
+        return Colors.blue;
+      case 1:
+        return Colors.green;
+      case 2:
+        return Colors.yellow;
+      case 3:
+        return Colors.orange;
+      case 4:
+        return Colors.red;
+      default:
+        return Colors.purple;
+    }
   }
 
   // Desenha o bloco na tela
   void paint(Canvas canvas) {
     final brickPaint = Paint()
-      ..color = const Color(0xFFFF79C6) // Cor rosa do tema Dracula
+      ..color = color
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(position, radius, brickPaint);
@@ -34,7 +67,8 @@ class Brick {
     final textPainter = TextPainter(
       text: TextSpan(
         text: value.toString(),
-        style: const TextStyle(color: Color(0xFF282A36), fontSize: 16),
+        style: const TextStyle(
+            color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
       ),
       textDirection: TextDirection.ltr,
     );

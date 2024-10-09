@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../Objects/ball.dart';
 import '../Objects/brick.dart';
+import '../Objects/cannon.dart';
+import '../Objects/aim.dart';
 import '../logic/collision_handler.dart';
 
 // Widget principal da tela do jogo
@@ -15,6 +17,8 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   late List<Brick> bricks;
   late List<Ball> balls;
+  late Cannon cannon;
+  late AimLine aimLine;
   late AnimationController _controller;
 
   // Inicializa o estado do jogo
@@ -36,6 +40,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     super.didChangeDependencies();
     final screenSize = MediaQuery.of(context).size;
     bricks = Brick.generateBricks(screenSize, 10);
+    cannon =
+        Cannon(basePosition: Offset(screenSize.width / 2, screenSize.height));
+    aimLine = AimLine(cannon: cannon);
   }
 
   // Atualiza o estado do jogo a cada frame
@@ -43,7 +50,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     final screenSize = MediaQuery.of(context).size;
     setState(() {
       for (var ball in balls) {
-        ball.update(screenSize);
+        ball.update(screenSize, balls); // Modificado aqui
         CollisionHandler.handleCollisions(ball, bricks);
       }
       balls.removeWhere((ball) => ball.isOffScreen(screenSize));
@@ -64,6 +71,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     return Scaffold(
       backgroundColor: const Color(0xFF282A36),
       body: GestureDetector(
+        onPanUpdate: _onPanUpdate,
         onPanStart: (details) {
           final launchPosition = Offset(
             MediaQuery.of(context).size.width / 2,
@@ -75,11 +83,19 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           _launchBall(launchPosition, direction);
         },
         child: CustomPaint(
-          painter: GamePainter(bricks: bricks, balls: balls),
+          painter: GamePainter(
+              bricks: bricks, balls: balls, cannon: cannon, aimLine: aimLine),
           size: Size.infinite,
         ),
       ),
     );
+  }
+
+  // Atualiza a posição alvo do canhão
+  void _onPanUpdate(DragUpdateDetails details) {
+    setState(() {
+      cannon.updateTarget(details.localPosition);
+    });
   }
 
 // Limpa os recursos do controlador quando o widget é descartado
@@ -94,8 +110,15 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 class GamePainter extends CustomPainter {
   final List<Brick> bricks;
   final List<Ball> balls;
+  final Cannon cannon;
+  final AimLine aimLine;
 
-  GamePainter({required this.bricks, required this.balls});
+  GamePainter({
+    required this.bricks,
+    required this.balls,
+    required this.cannon,
+    required this.aimLine,
+  });
 
   // Desenha os objetos do jogo na tela
   @override
@@ -109,6 +132,12 @@ class GamePainter extends CustomPainter {
     for (var ball in balls) {
       ball.paint(canvas);
     }
+
+    // Desenhar canhão
+    cannon.paint(canvas, size);
+
+    // Desenhar mira
+    aimLine.paint(canvas, size, balls);
   }
 
   @override
